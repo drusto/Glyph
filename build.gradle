@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         // You might need to update the version of the Android Gradle plugin based on your Android Studio
-        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath 'com.android.tools.build:gradle:8.12.0'
     }
 }
 
