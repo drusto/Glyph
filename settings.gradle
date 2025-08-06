@@ -1,0 +1,2 @@
+rootProject.name = "GlyphToyApp"
+include ':app'
