@@ -3,9 +3,6 @@
 build/
 app/build/
 
-# Local configuration
-local.properties
-
 # IDE files
 *.iml
 .idea/

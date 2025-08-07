@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.glyphtoy"
-        minSdk 33
+        minSdk 34
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -28,15 +28,9 @@ android {
     namespace "com.example.glyphtoy"
 }
 
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
-
 dependencies {
-    // Include the Nothing Glyph Matrix SDK from the libs folder
-    implementation(name: 'GlyphMatrixSDK', ext: 'aar')
+    // Include the Nothing Glyph Matrix SDK from the module directory
+    implementation files('GlyphMatrixSDK.aar')
 
     // Basic AndroidX dependencies for a simple app with an Activity and view binding
     implementation 'androidx.appcompat:appcompat:1.6.1'
