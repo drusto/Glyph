@@ -28,16 +28,7 @@ android {
     namespace "com.example.glyphtoy"
 }
 
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
-
 dependencies {
-    // Include the Nothing Glyph Matrix SDK from the libs folder
-    implementation(name: 'GlyphMatrixSDK', ext: 'aar')
-
     // Basic AndroidX dependencies for a simple app with an Activity and view binding
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.12.0'
