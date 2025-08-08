@@ -15,6 +15,8 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 
+import com.nothing.ketchum.GlyphMatrixUtils;
+
 /**
  * Ein Beispiel‑Dienst, der ein vom Benutzer ausgewähltes Bild als Glyph
  * darstellt und optional den Always‑On‑Modus unterstützt. Das Bild wird aus
@@ -107,7 +109,7 @@ public class SampleToyService extends Service {
 
     /**
      * Lädt das gespeicherte Glyph‑Bild und konvertiert es in ein Integer‑Array
-     * mit ARGB‑Werten. Dieses Array entspricht einem 25×25‑Raster und kann
+     * mit Graustufen‑Werten. Dieses Array entspricht einem 25×25‑Raster und kann
      * direkt an {@code setMatrixFrame(int[])} übergeben werden【751807440283616†L495-L506】.
      */
     private int[] loadImageData() {
@@ -119,15 +121,6 @@ public class SampleToyService extends Service {
         if (bitmap == null) {
             return null;
         }
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        int[] data = new int[width * height];
-        int index = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                data[index++] = bitmap.getPixel(x, y);
-            }
-        }
-        return data;
+        return GlyphMatrixUtils.toGrayscaleArray(bitmap, 255);
     }
 }

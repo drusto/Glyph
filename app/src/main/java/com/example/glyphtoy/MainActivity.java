@@ -18,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.nothing.ketchum.GlyphMatrixUtils;
+
 /**
  * Diese Aktivität ermöglicht es dem Benutzer, ein quadratisches Bild aus der Galerie
  * auszuwählen und im internen Speicher abzulegen. Der ausgewählte Inhalt kann
@@ -85,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
         int x = (original.getWidth() - size) / 2;
         int y = (original.getHeight() - size) / 2;
         Bitmap squared = Bitmap.createBitmap(original, x, y, size, size);
-        return Bitmap.createScaledBitmap(squared, 25, 25, true);
+        Bitmap scaled = Bitmap.createScaledBitmap(squared, 25, 25, true);
+        return GlyphMatrixUtils.toGrayscaleBitmap(scaled, 255);
     }
 
     /**
