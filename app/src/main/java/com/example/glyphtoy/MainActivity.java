@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -48,8 +47,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Beim Start: Wenn ein Bild gespeichert wurde, lade die Vorschau
-        File imgFile = new File(getFilesDir(), "selected_glyph.png");
+        // Beim Start: Wenn ein Vorschaubild gespeichert wurde, lade es
+        File imgFile = new File(getFilesDir(), "selected_glyph_preview.png");
+        if (!imgFile.exists()) {
+            // Fallback: Verwende das Toy-Bild, falls kein Vorschaubild existiert
+            imgFile = new File(getFilesDir(), "selected_glyph.png");
+        }
         if (imgFile.exists()) {
             Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewImageView.setImageBitmap(bitmap);
@@ -63,9 +66,21 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = data.getData();
             if (uri != null) {
                 try {
-                    Bitmap bitmap = getSquareBitmapFromUri(uri);
-                    saveBitmap(bitmap);
-                    previewImageView.setImageBitmap(bitmap);
+                    // Originales Bild für die Vorschau laden und speichern
+                    InputStream previewStream = getContentResolver().openInputStream(uri);
+                    Bitmap previewBitmap = BitmapFactory.decodeStream(previewStream);
+                    if (previewStream != null) {
+                        previewStream.close();
+                    }
+                    if (previewBitmap != null) {
+                        previewImageView.setImageBitmap(previewBitmap);
+                        savePreviewBitmap(previewBitmap);
+                    }
+
+                    // Für das Toy nur ein skaliertes Graustufenbild speichern
+                    Bitmap toyBitmap = getSquareBitmapFromUri(uri);
+                    Bitmap grayscale = GlyphMatrixUtils.toGrayscaleBitmap(toyBitmap, 255);
+                    saveBitmap(grayscale);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -80,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
     private Bitmap getSquareBitmapFromUri(Uri uri) throws IOException {
         InputStream input = getContentResolver().openInputStream(uri);
         Bitmap original = BitmapFactory.decodeStream(input);
+        if (input != null) {
+            input.close();
+        }
         if (original == null) {
             throw new IOException("Konnte Bild nicht laden");
         }
@@ -87,8 +105,7 @@ public class MainActivity extends AppCompatActivity {
         int x = (original.getWidth() - size) / 2;
         int y = (original.getHeight() - size) / 2;
         Bitmap squared = Bitmap.createBitmap(original, x, y, size, size);
-        Bitmap scaled = Bitmap.createScaledBitmap(squared, 25, 25, true);
-        return GlyphMatrixUtils.toGrayscaleBitmap(scaled, 255);
+        return Bitmap.createScaledBitmap(squared, 25, 25, true);
     }
 
     /**
@@ -98,6 +115,17 @@ public class MainActivity extends AppCompatActivity {
      */
     private void saveBitmap(Bitmap bitmap) throws IOException {
         File file = new File(getFilesDir(), "selected_glyph.png");
+        FileOutputStream out = new FileOutputStream(file);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        out.flush();
+        out.close();
+    }
+
+    /**
+     * Speichert das Vorschaubild unter dem Namen {@code selected_glyph_preview.png}.
+     */
+    private void savePreviewBitmap(Bitmap bitmap) throws IOException {
+        File file = new File(getFilesDir(), "selected_glyph_preview.png");
         FileOutputStream out = new FileOutputStream(file);
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush();
