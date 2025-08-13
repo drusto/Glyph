@@ -4,7 +4,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.glyphtoy"
+        applicationId "com.grsr.glyphtoy"
         minSdk 34
         targetSdk 34
         versionCode 1
@@ -25,7 +25,7 @@ android {
     }
 
     // Namespacing for Android resources
-    namespace "com.example.glyphtoy"
+    namespace "com.grsr.staticGlyph"
 }
 
 dependencies {

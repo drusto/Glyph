@@ -1,4 +1,4 @@
-package com.example.glyphtoy;
+package com.grsr.staticGlyph;
 
 import android.content.Intent;
 import android.graphics.Bitmap;

@@ -1,10 +1,9 @@
-package com.example.glyphtoy;
+package com.grsr.staticGlyph;
 
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -31,7 +30,7 @@ import com.nothing.ketchum.GlyphMatrixUtils;
  * diese Klassen, weil sie im AAR enthalten sind. Fügen Sie sie entsprechend
  * Ihrer Projektkonfiguration hinzu.
  */
-public class SampleToyService extends Service {
+public class staticToyService extends Service {
 
     // Verwalter für die Verbindung zur Glyph Matrix
     private Object mGM;

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.glyphtoy">
+    package="com.grsr.staticGlyph">
 
     <!-- Required permission for Nothing glyph toys -->
     <uses-permission android:name="com.nothing.ketchum.permission.ENABLE" />
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
+        android:label="Static Glyph"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
@@ -27,7 +27,7 @@
          and resource identifiers with your own implementation when customizing.
         -->
         <service
-            android:name=".SampleToyService"
+            android:name=".staticToyService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.nothing.glyph.TOY" />
