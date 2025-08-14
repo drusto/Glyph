@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        CrashlyticsUtil.log("MainActivity#onCreate");
+
         previewImageView = findViewById(R.id.preview_image_view);
         previewBitpmapView = findViewById(R.id.preview_bitmap_view);
         Button selectButton = findViewById(R.id.select_image_button);
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        CrashlyticsUtil.log("MainActivity#onActivityResult");
         if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
             if (uri != null) {
@@ -97,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    CrashlyticsUtil.recordException(e);
                 }
             }
         }
@@ -104,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Bitmap toGlyph25(Bitmap src) {
+        CrashlyticsUtil.log("MainActivity#toGlyph25");
         final int TARGET = 25;
         Bitmap scaled = Bitmap.createBitmap(TARGET, TARGET, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(scaled);
@@ -159,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
      * überschrieben.
      */
     private void saveBitmap(Bitmap bitmap) throws IOException {
+        CrashlyticsUtil.log("MainActivity#saveBitmap");
         File file = new File(getFilesDir(), "selected_glyph.png");
         FileOutputStream out = new FileOutputStream(file);
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -170,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
      * Speichert das Vorschaubild unter dem Namen {@code selected_glyph_preview.png}.
      */
     private void savePreviewBitmap(Bitmap bitmap) throws IOException {
+        CrashlyticsUtil.log("MainActivity#savePreviewBitmap");
         File file = new File(getFilesDir(), "selected_glyph_preview.png");
         FileOutputStream out = new FileOutputStream(file);
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
