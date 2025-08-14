@@ -22,7 +22,7 @@ import com.nothing.ketchum.GlyphMatrixUtils;
 /**
  * Diese Aktivität ermöglicht es dem Benutzer, ein quadratisches Bild aus der Galerie
  * auszuwählen und im internen Speicher abzulegen. Der ausgewählte Inhalt kann
- * später vom {@link SampleToyService} gelesen werden, um ihn auf der Glyph Matrix
+ * später vom {@link staticToyService} gelesen werden, um ihn auf der Glyph Matrix
  * darzustellen.
  */
 public class MainActivity extends AppCompatActivity {
