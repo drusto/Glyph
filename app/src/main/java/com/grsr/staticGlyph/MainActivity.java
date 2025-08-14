@@ -3,6 +3,9 @@ package com.grsr.staticGlyph;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PICK_IMAGE = 1001;
 
     private ImageView previewImageView;
+    private ImageView previewBitpmapView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         previewImageView = findViewById(R.id.preview_image_view);
+        previewBitpmapView = findViewById(R.id.preview_bitmap_view);
         Button selectButton = findViewById(R.id.select_image_button);
         selectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,6 +62,13 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewImageView.setImageBitmap(bitmap);
         }
+
+        File glyphFile = new File(getFilesDir(), "selected_glyph.png");
+        if (glyphFile.exists()) {
+            Bitmap bitmapGlyph = BitmapFactory.decodeFile(glyphFile.getAbsolutePath());
+            previewBitpmapView.setImageBitmap(bitmapGlyph);
+        }
+
     }
 
     @Override
@@ -75,12 +87,14 @@ public class MainActivity extends AppCompatActivity {
                     if (previewBitmap != null) {
                         previewImageView.setImageBitmap(previewBitmap);
                         savePreviewBitmap(previewBitmap);
+
+                        // Für das Toy nur ein skaliertes Graustufenbild speichern
+                        Bitmap toyBitmap = toGlyph25(previewBitmap);
+                        previewBitpmapView.setImageBitmap(toyBitmap);
+                        saveBitmap(toyBitmap);
                     }
 
-                    // Für das Toy nur ein skaliertes Graustufenbild speichern
-                    Bitmap toyBitmap = getSquareBitmapFromUri(uri);
-                    Bitmap grayscale = GlyphMatrixUtils.toGrayscaleBitmap(toyBitmap, 255);
-                    saveBitmap(grayscale);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -88,25 +102,56 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Lädt ein Bitmap aus der angegebenen Uri, skaliert und beschneidet es zu einem
-     * quadratischen Bild.
-     */
-    private Bitmap getSquareBitmapFromUri(Uri uri) throws IOException {
-        InputStream input = getContentResolver().openInputStream(uri);
-        Bitmap original = BitmapFactory.decodeStream(input);
-        if (input != null) {
-            input.close();
+
+    private Bitmap toGlyph25(Bitmap src) {
+        final int TARGET = 25;
+        Bitmap scaled = Bitmap.createBitmap(TARGET, TARGET, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scaled);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
+
+        // Bild proportional skalieren & mittig setzen
+        float sw = src.getWidth();
+        float sh = src.getHeight();
+        float scale = Math.min(TARGET / sw, TARGET / sh);
+        float scaledW = sw * scale;
+        float scaledH = sh * scale;
+        float dx = (TARGET - scaledW) / 2f;
+        float dy = (TARGET - scaledH) / 2f;
+
+        Matrix m = new Matrix();
+        m.postScale(scale, scale);
+        m.postTranslate(dx, dy);
+        canvas.drawBitmap(src, m, paint);
+
+        // Jetzt Pixel farblich anpassen
+        for (int y = 0; y < TARGET; y++) {
+            for (int x = 0; x < TARGET; x++) {
+                int pixel = scaled.getPixel(x, y);
+                int alpha = (pixel >> 24) & 0xff;
+
+                if (alpha == 0) {
+                    // Transparenter Bereich → Hintergrundfarbe #000000
+                    scaled.setPixel(x, y, 0xFF000000);
+                } else {
+                    // Helligkeit berechnen (Luminanz)
+                    int r = (pixel >> 16) & 0xff;
+                    int g = (pixel >> 8) & 0xff;
+                    int b = (pixel) & 0xff;
+                    float luminance = (0.299f * r + 0.587f * g + 0.114f * b) / 255f; // 0..1
+
+                    // Helligkeit auf Bereich #1C1C1C bis #FFFFFF mappen
+                    // 0% → #1C1C1C (28,28,28), 100% → #FFFFFF (255,255,255)
+                    int minVal = 0x1C; // 28
+                    int maxVal = 0xFF; // 255
+                    int gray = Math.round(minVal + (maxVal - minVal) * luminance);
+
+                    scaled.setPixel(x, y, 0xFF000000 | (gray << 16) | (gray << 8) | gray);
+                }
+            }
         }
-        if (original == null) {
-            throw new IOException("Konnte Bild nicht laden");
-        }
-        int size = Math.min(original.getWidth(), original.getHeight());
-        int x = (original.getWidth() - size) / 2;
-        int y = (original.getHeight() - size) / 2;
-        Bitmap squared = Bitmap.createBitmap(original, x, y, size, size);
-        return Bitmap.createScaledBitmap(squared, 25, 25, true);
+        return scaled;
     }
+
 
     /**
      * Speichert das gegebene Bitmap im internen Speicher unter dem Namen

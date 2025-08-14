@@ -17,6 +17,7 @@ import java.io.File;
 
 import com.nothing.ketchum.Glyph;
 import com.nothing.ketchum.GlyphException;
+import com.nothing.ketchum.GlyphMatrixFrame;
 import com.nothing.ketchum.GlyphMatrixManager;
 import com.nothing.ketchum.GlyphMatrixUtils;
 import com.nothing.ketchum.GlyphToy;
@@ -51,6 +52,7 @@ public class staticToyService extends Service {
                         int[] data = loadImageData();
                         if (data != null) {
                             try {
+
                                 mGM.setMatrixFrame(data);
                             } catch (GlyphException e) {
                                 throw new RuntimeException(e);
@@ -117,10 +119,13 @@ public class staticToyService extends Service {
         if (!file.exists()) {
             return null;
         }
+
         Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         if (bitmap == null) {
             return null;
         }
         return GlyphMatrixUtils.toGrayscaleArray(bitmap, 255);
     }
+
+
 }
