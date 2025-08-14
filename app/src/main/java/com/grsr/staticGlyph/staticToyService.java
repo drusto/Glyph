@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -14,7 +15,11 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 
+import com.nothing.ketchum.Glyph;
+import com.nothing.ketchum.GlyphException;
+import com.nothing.ketchum.GlyphMatrixManager;
 import com.nothing.ketchum.GlyphMatrixUtils;
+import com.nothing.ketchum.GlyphToy;
 
 /**
  * Ein Beispiel‑Dienst, der ein vom Benutzer ausgewähltes Bild als Glyph
@@ -33,27 +38,27 @@ import com.nothing.ketchum.GlyphMatrixUtils;
 public class staticToyService extends Service {
 
     // Verwalter für die Verbindung zur Glyph Matrix
-    private Object mGM;
+    private GlyphMatrixManager mGM;
 
-    // Empfängt Nachrichten vom System (z. B. AOD‑Events)
     private final Handler serviceHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            // Die Konstanten MSG_GLYPH_TOY, MSG_GLYPH_TOY_DATA und EVENT_AOD
-            // stammen aus der Klasse GlyphToy des Nothing SDK. Stellen Sie
-            // sicher, dass Sie die Klasse importieren und verwenden.
             switch (msg.what) {
-                // case GlyphToy.MSG_GLYPH_TOY:
-                //     Bundle bundle = msg.getData();
-                //     String event = bundle.getString(GlyphToy.MSG_GLYPH_TOY_DATA);
-                //     if (GlyphToy.EVENT_AOD.equals(event)) {
-                //         // Beim AOD‑Ereignis die Matrix erneut mit dem Bild füllen
-                //         int[] data = loadImageData();
-                //         if (mGM != null && data != null) {
-                //             // ((GlyphMatrixManager)mGM).setMatrixFrame(data);
-                //         }
-                //     }
-                //     break;
+                case GlyphToy.MSG_GLYPH_TOY: {
+                    Bundle bundle = msg.getData();
+                    String event = bundle.getString(GlyphToy.MSG_GLYPH_TOY_DATA);
+                    if (GlyphToy.EVENT_AOD.equals(event)) {
+                        int[] data = loadImageData();
+                        if (data != null) {
+                            try {
+                                mGM.setMatrixFrame(data);
+                            } catch (GlyphException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                    break;
+                }
                 default:
                     super.handleMessage(msg);
             }
@@ -72,17 +77,13 @@ public class staticToyService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        // Bei Beendigung die Verbindung trennen
-        if (mGM != null) {
-            try {
-                // ((GlyphMatrixManager)mGM).unInit();
-            } catch (Exception e) {
-                // ignorieren
-            }
-            mGM = null;
-        }
-        return super.onUnbind(intent);
+        mGM.unInit();
+        mGM.turnOff();
+        mGM = null;
+        return false;
     }
+
+
 
     /**
      * Initialisiert den GlyphMatrixManager, registriert das Gerät und sendet das
@@ -93,13 +94,13 @@ public class staticToyService extends Service {
      */
     private void initGlyph() {
         try {
-            // mGM = new GlyphMatrixManager();
-            // ((GlyphMatrixManager)mGM).init(null); // Callback implementieren falls benötigt
-            // ((GlyphMatrixManager)mGM).register(Glyph.DEVICE_23112);
+             mGM = GlyphMatrixManager.getInstance(getApplicationContext());
+             mGM.init(null);
+             mGM.register(Glyph.DEVICE_23112);
 
             int[] data = loadImageData();
             if (data != null) {
-                // ((GlyphMatrixManager)mGM).setMatrixFrame(data);
+                mGM.setMatrixFrame(data);
             }
         } catch (Exception e) {
             // Fehlerbehandlung (optional)
