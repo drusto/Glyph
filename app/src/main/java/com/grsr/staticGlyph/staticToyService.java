@@ -44,6 +44,7 @@ public class staticToyService extends Service {
     private final Handler serviceHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
+            CrashlyticsUtil.log("staticToyService#handleMessage");
             switch (msg.what) {
                 case GlyphToy.MSG_GLYPH_TOY: {
                     Bundle bundle = msg.getData();
@@ -55,6 +56,7 @@ public class staticToyService extends Service {
 
                                 mGM.setMatrixFrame(data);
                             } catch (GlyphException e) {
+                                CrashlyticsUtil.recordException(e);
                                 throw new RuntimeException(e);
                             }
                         }
@@ -72,6 +74,7 @@ public class staticToyService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        CrashlyticsUtil.log("staticToyService#onBind");
         // Initialisierung der Glyph‑Verbindung und Anzeige des Bildes
         initGlyph();
         return serviceMessenger.getBinder();
@@ -79,6 +82,7 @@ public class staticToyService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        CrashlyticsUtil.log("staticToyService#onUnbind");
         mGM.unInit();
         mGM.turnOff();
         mGM = null;
@@ -95,6 +99,7 @@ public class staticToyService extends Service {
      * Klassen des AAR ersetzt werden.
      */
     private void initGlyph() {
+        CrashlyticsUtil.log("staticToyService#initGlyph");
         try {
              mGM = GlyphMatrixManager.getInstance(getApplicationContext());
              mGM.init(null);
@@ -105,7 +110,7 @@ public class staticToyService extends Service {
                 mGM.setMatrixFrame(data);
             }
         } catch (Exception e) {
-            // Fehlerbehandlung (optional)
+            CrashlyticsUtil.recordException(e);
         }
     }
 
@@ -115,6 +120,7 @@ public class staticToyService extends Service {
      * direkt an {@code setMatrixFrame(int[])} übergeben werden【751807440283616†L495-L506】.
      */
     private int[] loadImageData() {
+        CrashlyticsUtil.log("staticToyService#loadImageData");
         File file = new File(getFilesDir(), "selected_glyph.png");
         if (!file.exists()) {
             return null;

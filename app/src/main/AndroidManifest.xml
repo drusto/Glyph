@@ -6,6 +6,7 @@
     <uses-permission android:name="com.nothing.ketchum.permission.ENABLE" />
 
     <application
+        android:name=".GlyphApplication"
         android:allowBackup="true"
         android:label="Static Glyph"
         android:supportsRtl="true"
