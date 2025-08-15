@@ -12,8 +12,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,25 +37,42 @@ public class MainActivity extends AppCompatActivity {
     private ImageView previewImageView;
     private ImageView previewBitpmapView;
 
+    private FirebaseAnalytics analytics;
+
+    private final ActivityResultLauncher<String> pickImage =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) return;
+                try (InputStream previewStream = getContentResolver().openInputStream(uri)) {
+                    Bitmap previewBitmap = BitmapFactory.decodeStream(previewStream);
+                    if (previewBitmap != null) {
+                        previewImageView.setImageBitmap(previewBitmap);
+                        savePreviewBitmap(previewBitmap);
+                        Bitmap toyBitmap = toGlyph25(previewBitmap);
+                        previewBitpmapView.setImageBitmap(toyBitmap);
+                        saveBitmap(toyBitmap);
+                    }
+                } catch (IOException e) { e.printStackTrace(); }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FirebaseAnalytics analytics = FirebaseAnalytics.getInstance(this);
+
+        analytics.logEvent("App_gestartet", null);
+
+        Bundle params = new Bundle();
+        params.putString("source", "glyph_picker");
+        analytics.logEvent("image_selected", params);
+
+
         previewImageView = findViewById(R.id.preview_image_view);
         previewBitpmapView = findViewById(R.id.preview_bitmap_view);
         Button selectButton = findViewById(R.id.select_image_button);
-        selectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Öffnet den Systemdialog zum Auswählen eines Bildes
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                throw new RuntimeException("Test Crash"); // Force a crash
 
-                //startActivityForResult(Intent.createChooser(intent, "Bild auswählen"), REQUEST_CODE_PICK_IMAGE);
-            }
-        });
+        selectButton.setOnClickListener(v -> pickImage.launch("image/*"));
 
         // Beim Start: Wenn ein Vorschaubild gespeichert wurde, lade es
         File imgFile = new File(getFilesDir(), "selected_glyph_preview.png");
@@ -64,46 +85,12 @@ public class MainActivity extends AppCompatActivity {
             previewImageView.setImageBitmap(bitmap);
         }
 
-        File glyphFile = new File(getFilesDir(), "selected_glyph.png");
-        if (glyphFile.exists()) {
-            Bitmap bitmapGlyph = BitmapFactory.decodeFile(glyphFile.getAbsolutePath());
+        if (imgFile.exists()) {
+            Bitmap bitmapGlyph = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewBitpmapView.setImageBitmap(bitmapGlyph);
         }
 
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            if (uri != null) {
-                try {
-                    // Originales Bild für die Vorschau laden und speichern
-                    InputStream previewStream = getContentResolver().openInputStream(uri);
-                    Bitmap previewBitmap = BitmapFactory.decodeStream(previewStream);
-                    if (previewStream != null) {
-                        previewStream.close();
-                    }
-                    if (previewBitmap != null) {
-                        previewImageView.setImageBitmap(previewBitmap);
-                        savePreviewBitmap(previewBitmap);
-
-                        // Für das Toy nur ein skaliertes Graustufenbild speichern
-                        Bitmap toyBitmap = toGlyph25(previewBitmap);
-                        previewBitpmapView.setImageBitmap(toyBitmap);
-                        saveBitmap(toyBitmap);
-                    }
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-    }
-
 
     private Bitmap toGlyph25(Bitmap src) {
         final int TARGET = 25;

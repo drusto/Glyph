@@ -1,6 +1,7 @@
 package com.grsr.staticGlyph;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -40,6 +41,7 @@ public class staticToyService extends Service {
 
     // Verwalter für die Verbindung zur Glyph Matrix
     private GlyphMatrixManager mGM;
+    private GlyphMatrixManager.Callback mCallback;
 
     private final Handler serviceHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -48,16 +50,8 @@ public class staticToyService extends Service {
                 case GlyphToy.MSG_GLYPH_TOY: {
                     Bundle bundle = msg.getData();
                     String event = bundle.getString(GlyphToy.MSG_GLYPH_TOY_DATA);
-                    if (GlyphToy.EVENT_AOD.equals(event)) {
-                        int[] data = loadImageData();
-                        if (data != null) {
-                            try {
-
-                                mGM.setMatrixFrame(data);
-                            } catch (GlyphException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                    if (GlyphToy.EVENT_AOD.equals(event) || GlyphToy.EVENT_CHANGE.equals((event))) {
+                      action();
                     }
                     break;
                 }
@@ -79,8 +73,8 @@ public class staticToyService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        mGM.unInit();
         mGM.turnOff();
+        mCallback = null;
         mGM = null;
         return false;
     }
@@ -97,17 +91,34 @@ public class staticToyService extends Service {
     private void initGlyph() {
         try {
              mGM = GlyphMatrixManager.getInstance(getApplicationContext());
-             mGM.init(null);
-             mGM.register(Glyph.DEVICE_23112);
+            mCallback = new GlyphMatrixManager.Callback() {
+                @Override
+                public void onServiceConnected(ComponentName componentName) {
+                    mGM.register(Glyph.DEVICE_23112);
+                    action();
+                }
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+                }
+            };
+            mGM.init(mCallback);
 
-            int[] data = loadImageData();
-            if (data != null) {
-                mGM.setMatrixFrame(data);
-            }
         } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
+    private void action() {
+
+        int[] data = loadImageData();
+        if (data != null) {
+            try {
+                mGM.setMatrixFrame(data);
+            } catch (GlyphException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
     /**
      * Lädt das gespeicherte Glyph‑Bild und konvertiert es in ein Integer‑Array
      * mit Graustufen‑Werten. Dieses Array entspricht einem 25×25‑Raster und kann
@@ -116,12 +127,12 @@ public class staticToyService extends Service {
     private int[] loadImageData() {
         File file = new File(getFilesDir(), "selected_glyph.png");
         if (!file.exists()) {
-            return null;
+            throw new RuntimeException("BIld nicht gefunden");
         }
 
         Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         if (bitmap == null) {
-            return null;
+            throw new RuntimeException("Bitmap nicht erstellt");
         }
         return GlyphMatrixUtils.toGrayscaleArray(bitmap, 255);
     }

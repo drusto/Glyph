@@ -1,48 +1,53 @@
-
-plugins{
-    id 'com.android.application'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
-
-}
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services' // Firebase
 
 android {
-    compileSdk 34
+    namespace 'com.grsr.staticGlyph'
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.grsr.staticGlyph"
+        applicationId 'com.grsr.staticGlyph'
         minSdk 34
-        targetSdk 34
+        targetSdk 36
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
         }
     }
 
-    // Enable Java 8 features
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
-    // Namespacing for Android resources
-    namespace "com.grsr.staticGlyph"
+    buildFeatures {
+        viewBinding true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/AL2.0', 'META-INF/LGPL2.1']
+        }
+    }
 }
 
 dependencies {
-    // Include the Nothing Glyph Matrix SDK from the module directory
+    // Firebase (BoM + Analytics)
+    implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // UI/Support
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+
+    // Nothing Glyph SDK (lokales AAR)
     implementation files('GlyphMatrixSDK.aar')
-
-    // Basic AndroidX dependencies for a simple app with an Activity and view binding
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'com.google.android.material:material:1.11.0'
-
-    }
-
-
+}
