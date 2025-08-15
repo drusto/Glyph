@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "489778309130",
+    "project_id": "glyphcarsten",
+    "storage_bucket": "glyphcarsten.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:489778309130:android:5effbe6523988c664757f3",
+        "android_client_info": {
+          "package_name": "com.grsr.staticGlyph"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYYd_FBfRykW9FogL1SMqi6sByWQrvpiY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,7 +2,6 @@
 .gradle/
 build/
 app/build/
-*google-services.json
 # IDE files
 *.iml
 .idea/
