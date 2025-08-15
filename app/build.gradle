@@ -1,5 +1,8 @@
-apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services' // Firebase
+plugins{
+    id 'com.android.application'
+    id 'com.google.gms.google-services' // Firebase
+}
+
 
 android {
     namespace 'com.grsr.staticGlyph'

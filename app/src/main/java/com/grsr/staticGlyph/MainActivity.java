@@ -59,13 +59,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FirebaseAnalytics analytics = FirebaseAnalytics.getInstance(this);
+        analytics = FirebaseAnalytics.getInstance(this);
 
-        analytics.logEvent("App_gestartet", null);
-
-        Bundle params = new Bundle();
-        params.putString("source", "glyph_picker");
-        analytics.logEvent("image_selected", params);
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.METHOD, "test_install");
+        analytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
 
 
         previewImageView = findViewById(R.id.preview_image_view);
