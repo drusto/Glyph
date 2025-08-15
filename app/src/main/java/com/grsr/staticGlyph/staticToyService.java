@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.nothing.ketchum.Glyph;
 import com.nothing.ketchum.GlyphException;
 import com.nothing.ketchum.GlyphMatrixFrame;
@@ -43,6 +44,8 @@ public class staticToyService extends Service {
     private GlyphMatrixManager mGM;
     private GlyphMatrixManager.Callback mCallback;
 
+    private FirebaseAnalytics analytics;
+
     private final Handler serviceHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -66,6 +69,9 @@ public class staticToyService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+
+        analytics = FirebaseAnalytics.getInstance(this);
+        sendLogToFirebase("Toy: onBind");
         // Initialisierung der Glyph‑Verbindung und Anzeige des Bildes
         initGlyph();
         return serviceMessenger.getBinder();
@@ -73,10 +79,17 @@ public class staticToyService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        sendLogToFirebase("Toy: onUnBind");
         mGM.turnOff();
         mCallback = null;
         mGM = null;
         return false;
+    }
+
+    private void sendLogToFirebase(String message) {
+        Bundle bundle = new Bundle();
+        bundle.putString("log_message", message);
+        analytics.logEvent("log_info", bundle);
     }
 
 
@@ -89,32 +102,39 @@ public class staticToyService extends Service {
      * Klassen des AAR ersetzt werden.
      */
     private void initGlyph() {
+        sendLogToFirebase("Toy: initGlyph");
         try {
              mGM = GlyphMatrixManager.getInstance(getApplicationContext());
             mCallback = new GlyphMatrixManager.Callback() {
                 @Override
                 public void onServiceConnected(ComponentName componentName) {
+                    sendLogToFirebase("Toy: onServiceConnected");
                     mGM.register(Glyph.DEVICE_23112);
                     action();
                 }
                 @Override
                 public void onServiceDisconnected(ComponentName componentName) {
+                    sendLogToFirebase("Toy: onServiceDisconntected");
                 }
             };
             mGM.init(mCallback);
 
         } catch (Exception e) {
+            sendLogToFirebase("Toy: initGlyph Error: " + e.getLocalizedMessage());
             throw new RuntimeException(e);
         }
     }
 
     private void action() {
 
+        sendLogToFirebase("Toy: action");
         int[] data = loadImageData();
         if (data != null) {
             try {
+                sendLogToFirebase("Toy: setMatrixFrame");
                 mGM.setMatrixFrame(data);
             } catch (GlyphException e) {
+                sendLogToFirebase("Toy: setMatrixFrame Fehler:" + e.getLocalizedMessage());
                 throw new RuntimeException(e);
             }
         }
@@ -125,13 +145,15 @@ public class staticToyService extends Service {
      * direkt an {@code setMatrixFrame(int[])} übergeben werden【751807440283616†L495-L506】.
      */
     private int[] loadImageData() {
-        File file = new File(getFilesDir(), "selected_glyph.png");
+        File file = new File(getFilesDir(), "selected_glyph_preview.png");
         if (!file.exists()) {
+            sendLogToFirebase("Toy: loadImageData: Datei nicht gefunden");
             throw new RuntimeException("BIld nicht gefunden");
         }
 
         Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         if (bitmap == null) {
+            sendLogToFirebase("Toy: loadImageData: Bitmap nicht erstellt");
             throw new RuntimeException("Bitmap nicht erstellt");
         }
         return GlyphMatrixUtils.toGrayscaleArray(bitmap, 255);

@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView previewBitpmapView;
 
     private FirebaseAnalytics analytics;
+
+
 
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -58,13 +61,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         analytics = FirebaseAnalytics.getInstance(this);
 
-        Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param.METHOD, "test_install");
-        analytics.logEvent(FirebaseAnalytics.Event.SIGN_UP, bundle);
-
+        sendLogToFirebase("Anwendung gestartet");
 
         previewImageView = findViewById(R.id.preview_image_view);
         previewBitpmapView = findViewById(R.id.preview_bitmap_view);
@@ -77,20 +76,33 @@ public class MainActivity extends AppCompatActivity {
         if (!imgFile.exists()) {
             // Fallback: Verwende das Toy-Bild, falls kein Vorschaubild existiert
             imgFile = new File(getFilesDir(), "selected_glyph.png");
+            sendLogToFirebase("Datei ausgewählt und vorhanden.");
         }
         if (imgFile.exists()) {
             Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewImageView.setImageBitmap(bitmap);
+            saveBitmap(bitmap);
+            sendLogToFirebase("Als Bitmap im großen Bild angezeigt");
         }
 
         if (imgFile.exists()) {
             Bitmap bitmapGlyph = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewBitpmapView.setImageBitmap(bitmapGlyph);
+            savePreviewBitmap(bitmapGlyph);
+            sendLogToFirebase("Als Bitmap im kleinen Bild angezeigt");
         }
 
     }
 
+    private void sendLogToFirebase(String message) {
+        Bundle bundle = new Bundle();
+        bundle.putString("log_message", message);
+        analytics.logEvent("log_info", bundle);
+    }
+
+
     private Bitmap toGlyph25(Bitmap src) {
+        sendLogToFirebase("Bitmap wird zu Glyph25 konvertiert");
         final int TARGET = 25;
         Bitmap scaled = Bitmap.createBitmap(TARGET, TARGET, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(scaled);
@@ -145,22 +157,43 @@ public class MainActivity extends AppCompatActivity {
      * {@code selected_glyph.png}. Wenn bereits eine Datei vorhanden ist, wird sie
      * überschrieben.
      */
-    private void saveBitmap(Bitmap bitmap) throws IOException {
+    private void saveBitmap(Bitmap bitmap)  {
         File file = new File(getFilesDir(), "selected_glyph.png");
-        FileOutputStream out = new FileOutputStream(file);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(file);
+
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush();
         out.close();
+        } catch (FileNotFoundException e) {
+            sendLogToFirebase("selected_glyph Not Found");
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            sendLogToFirebase("selected_glyph Not Writed");
+            throw new RuntimeException(e);
+        }
+        sendLogToFirebase("Bild als selcted_glyph.png gesichert");
     }
 
     /**
      * Speichert das Vorschaubild unter dem Namen {@code selected_glyph_preview.png}.
      */
-    private void savePreviewBitmap(Bitmap bitmap) throws IOException {
+    private void savePreviewBitmap(Bitmap bitmap)  {
         File file = new File(getFilesDir(), "selected_glyph_preview.png");
+    try {
         FileOutputStream out = new FileOutputStream(file);
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
         out.flush();
         out.close();
+    }catch (FileNotFoundException e) {
+        sendLogToFirebase("selected_glyph_preview Not Found");
+        throw new RuntimeException(e);
+    } catch (IOException e) {
+        sendLogToFirebase("selected_glyph_preview Not Writed");
+        throw new RuntimeException(e);
+    }
+
+    sendLogToFirebase("Bild als selected_glyph_preview.png gesichert");
     }
 }
