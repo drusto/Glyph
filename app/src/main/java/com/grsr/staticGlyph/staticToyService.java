@@ -21,6 +21,7 @@ import com.nothing.ketchum.Glyph;
 import com.nothing.ketchum.GlyphException;
 import com.nothing.ketchum.GlyphMatrixFrame;
 import com.nothing.ketchum.GlyphMatrixManager;
+import com.nothing.ketchum.GlyphMatrixObject;
 import com.nothing.ketchum.GlyphMatrixUtils;
 import com.nothing.ketchum.GlyphToy;
 
@@ -128,35 +129,52 @@ public class staticToyService extends Service {
     private void action() {
 
         sendLogToFirebase("Toy: action");
-        int[] data = loadImageData();
-        if (data != null) {
+        Bitmap data = loadImageData();
+        sendLogToFirebase("Toy: Bitmap gelesen");
             try {
-                sendLogToFirebase("Toy: setMatrixFrame");
-                mGM.setMatrixFrame(data);
+                sendLogToFirebase("Toy: create MatrixObject from Bitmap");
+                GlyphMatrixObject matrixObject = new GlyphMatrixObject.Builder().setImageSource(data)
+                        .setScale(100)
+                        .setOrientation(0)
+                        .setPosition(0, 0)
+                        .setReverse(false)
+                        .build();
+
+                sendLogToFirebase("Toy: create MatrixFrame from MatrixObject");
+                GlyphMatrixFrame frame = new GlyphMatrixFrame.Builder()
+                        .addTop(matrixObject)
+                        .build(this);
+
+                sendLogToFirebase("Toy: set MatrixFrame from Frame Render");
+                mGM.setMatrixFrame(frame.render());
             } catch (GlyphException e) {
                 sendLogToFirebase("Toy: setMatrixFrame Fehler:" + e.getLocalizedMessage());
                 throw new RuntimeException(e);
             }
-        }
+
     }
     /**
      * Lädt das gespeicherte Glyph‑Bild und konvertiert es in ein Integer‑Array
      * mit Graustufen‑Werten. Dieses Array entspricht einem 25×25‑Raster und kann
      * direkt an {@code setMatrixFrame(int[])} übergeben werden【751807440283616†L495-L506】.
      */
-    private int[] loadImageData() {
-        File file = new File(getFilesDir(), "selected_glyph_preview.png");
+    private Bitmap loadImageData() {
+        File file = new File(getFilesDir(), "selected_glyph.png");
         if (!file.exists()) {
             sendLogToFirebase("Toy: loadImageData: Datei nicht gefunden");
             throw new RuntimeException("BIld nicht gefunden");
         }
 
+        sendLogToFirebase("Toy: loadImageData: Datei gefunden");
         Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         if (bitmap == null) {
             sendLogToFirebase("Toy: loadImageData: Bitmap nicht erstellt");
             throw new RuntimeException("Bitmap nicht erstellt");
         }
-        return GlyphMatrixUtils.toGrayscaleArray(bitmap, 255);
+        sendLogToFirebase("Toy: loadImageData: Bitmap erstellt");
+
+        return bitmap;
+
     }
 
 

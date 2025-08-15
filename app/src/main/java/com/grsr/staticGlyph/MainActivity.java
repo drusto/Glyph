@@ -46,15 +46,23 @@ public class MainActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri == null) return;
                 try (InputStream previewStream = getContentResolver().openInputStream(uri)) {
+                    sendLogToFirebase("Datei ausgewählt und vorhanden.");
                     Bitmap previewBitmap = BitmapFactory.decodeStream(previewStream);
+                    sendLogToFirebase("Datei ausgewählt und zu Bitmap");
                     if (previewBitmap != null) {
+                        sendLogToFirebase("Datei ausgewählt und zu Bitmap erfolg");
                         previewImageView.setImageBitmap(previewBitmap);
                         savePreviewBitmap(previewBitmap);
+                        sendLogToFirebase("Preview gesichert");
                         Bitmap toyBitmap = toGlyph25(previewBitmap);
+                        sendLogToFirebase("toy erstellt");
                         previewBitpmapView.setImageBitmap(toyBitmap);
                         saveBitmap(toyBitmap);
+                        sendLogToFirebase("toy gespeichert");
                     }
-                } catch (IOException e) { e.printStackTrace(); }
+                } catch (IOException e) {
+                    sendLogToFirebase("Datei ausgewählt Fehler:" + e.getLocalizedMessage());
+                }
             });
 
     @Override
@@ -76,19 +84,17 @@ public class MainActivity extends AppCompatActivity {
         if (!imgFile.exists()) {
             // Fallback: Verwende das Toy-Bild, falls kein Vorschaubild existiert
             imgFile = new File(getFilesDir(), "selected_glyph.png");
-            sendLogToFirebase("Datei ausgewählt und vorhanden.");
+            sendLogToFirebase("Datei bei Start vorhanden.");
         }
         if (imgFile.exists()) {
             Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewImageView.setImageBitmap(bitmap);
-            saveBitmap(bitmap);
             sendLogToFirebase("Als Bitmap im großen Bild angezeigt");
         }
 
         if (imgFile.exists()) {
             Bitmap bitmapGlyph = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             previewBitpmapView.setImageBitmap(bitmapGlyph);
-            savePreviewBitmap(bitmapGlyph);
             sendLogToFirebase("Als Bitmap im kleinen Bild angezeigt");
         }
 
